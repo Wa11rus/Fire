@@ -20,50 +20,50 @@ conn = cx_Oracle.connect(username, password, database)
 cursor = conn.cursor()
 
 firstQuery = """
-  select
-    count(fire_id) as "count_of_fire",
+  SELECT
+  count(fire_id) as "count_of_fire",
     round(latitude, 1) || ' ' || round(longitude, 1) as "coordinate"
-    from fire_params_locations
-    WHERE
-    round(fire_params_locations.latitude, 1) >= - 15.1 and round(fire_params_locations.latitude, 1) <= -14.5
-    AND round(fire_params_locations.longitude, 1) >= 135.2 and round(fire_params_locations.longitude, 1) <= 140.1 group by round(latitude, 1) || ' ' || round(longitude, 1)
-
-
+FROM
+    fire_info
+    JOIN locations ON fire_info.location_id = locations.location_id
+ WHERE
+    round(latitude, 1) >= - 15.1 and round(latitude, 1) <= -14.5
+    AND round(longitude, 1) >= 135.2 and round(longitude, 1) <= 140.1 group by round(latitude, 1) || ' ' || round(longitude, 1)
 """
 
 secondQuery = """
   SELECT
-    params.brightness,
+   round(params.brightness) as "rounded brightness",
     COUNT(params.params_id) AS "count of brightness"
 FROM
     params
 GROUP BY
-    params.brightness
+   round(params.brightness)
 """
 
 thirdQuery = """
   SELECT
-    fire_id,
-    confidence.confidence
+   count(fire_info.fire_id) as "count_of_fires",
+   confidence.confidence
 FROM
     fire_info
     INNER JOIN confidence ON fire_info.confidence = confidence.confidence
+     group by 
+     confidence.confidence
+    order by count(fire_id)
 """
-
 cursor.execute(firstQuery)
 
-fire = ["fire_info"]
+coords = []
 fire_count = []
 
 for row in cursor:
-    print(row)
     fire_count += [row[0]]
-
+    coords +=[row[1]]
 data = [go.Bar(
-    x=fire,
+    x=coords,
     y=fire_count
 )]
-
 layout = go.Layout(
     title='Загальна кількість пожарів, за заданими координатами',
     xaxis=dict(
@@ -104,20 +104,19 @@ fire_brightness = py.plot([pie], filename ='fire-brightness')
 
 cursor.execute(thirdQuery)
 
-fire_id = []
+count_fire_id = []
 cofidence = []
 
 for row in cursor:
-    fire_id += [row[0]]
+    count_fire_id += [row[0]]
     cofidence += [row[1]]
 
 
 car_prices = go.Scatter(
-    x=cofidence,
-    y=fire_id,
+    x=count_fire_id,
+    y=cofidence,
     mode='lines+markers'
 )
-
 data = [car_prices]
 fire_confidence = py.plot(data, filename='fire-confidence')
 
