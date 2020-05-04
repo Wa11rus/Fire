@@ -20,14 +20,14 @@ conn = cx_Oracle.connect(username, password, database)
 cursor = conn.cursor()
 
 firstQuery = """
-  SELECT
-    COUNT(fire_id) AS "count_of_fires"
-FROM
-    fire_info
-    JOIN locations ON fire_info.location_id = locations.location_id
-WHERE
-    round(locations.latitude, 1) = - 15.1
-    AND round(locations.longitude, 1) = 135.2
+  select
+    count(fire_id) as "count_of_fire",
+    round(latitude, 1) || ' ' || round(longitude, 1) as "coordinate"
+    from fire_params_locations
+    WHERE
+    round(fire_params_locations.latitude, 1) >= - 15.1 and round(fire_params_locations.latitude, 1) <= -14.5
+    AND round(fire_params_locations.longitude, 1) >= 135.2 and round(fire_params_locations.longitude, 1) <= 140.1 group by round(latitude, 1) || ' ' || round(longitude, 1)
+
 
 """
 
