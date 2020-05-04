@@ -16,34 +16,37 @@ conn = cx_Oracle.connect(username, password, database)
 cursor = conn.cursor()
 
 
-firstQuery = """select
-    count(fire_id) as "count_of_fire",
+firstQuery = """
+  SELECT
+  count(fire_id) as "count_of_fire",
     round(latitude, 1) || ' ' || round(longitude, 1) as "coordinate"
-    from fire_params_locations
-    WHERE
-    round(fire_params_locations.latitude, 1) >= - 15.1 and round(fire_params_locations.latitude, 1) <= -14.5
-    AND round(fire_params_locations.longitude, 1) >= 135.2 and round(fire_params_locations.longitude, 1) <= 140.1 group by round(latitude, 1) || ' ' || round(longitude, 1)
+FROM
+    fire_info
+    JOIN locations ON fire_info.location_id = locations.location_id
+ WHERE
+    round(latitude, 1) >= - 15.1 and round(latitude, 1) <= -14.5
+    AND round(longitude, 1) >= 135.2 and round(longitude, 1) <= 140.1 group by round(latitude, 1) || ' ' || round(longitude, 1)
 """
 
 secondQuery = """
-SELECT
-    round(fire_params_locations.brightness) as "rounded brightness",
-    COUNT(fire_params_locations.params_id) AS "count of brightness"
+  SELECT
+   round(params.brightness) as "rounded brightness",
+    COUNT(params.params_id) AS "count of brightness"
 FROM
-    fire_params_locations
+    params
 GROUP BY
-    round(fire_params_locations.brightness)
+   round(params.brightness)
 """
 
 thirdQuery = """
- SELECT
-    count(fire_id) as "count_of_fires",
-    confidence
+  SELECT
+   count(fire_info.fire_id) as "count_of_fires",
+   confidence.confidence
 FROM
-    fire_params_locations
-   
-    group by 
-     confidence
+    fire_info
+    INNER JOIN confidence ON fire_info.confidence = confidence.confidence
+     group by 
+     confidence.confidence
     order by count(fire_id)
 """
 
